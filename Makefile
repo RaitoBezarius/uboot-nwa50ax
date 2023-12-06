@@ -906,7 +906,7 @@ quiet_cmd_pad_cat = CAT     $@
 cmd_pad_cat = $(cmd_objcopy) && $(append) || rm -f $@
 
 quiet_cmd_lzma = LZMA    $@
-cmd_lzma = /usr/bin/lzma -c -z -k -9 $< > $@
+cmd_lzma = lzma -c -z -k -9 $< > $@
 
 cfg: u-boot.cfg
 
