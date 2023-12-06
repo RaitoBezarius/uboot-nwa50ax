@@ -277,6 +277,7 @@ enum {
 	IH_TYPE_PMMC,            /* TI Power Management Micro-Controller Firmware */
 	IH_TYPE_STM32IMAGE,		/* STMicroelectronics STM32 Image */
 	IH_TYPE_SOCFPGAIMAGE_V1,	/* Altera SOCFPGA A10 Preloader	*/
+	IH_TYPE_MT7621_NAND,		/* MediaTek MT7621 BootROM image header */
 
 	IH_TYPE_COUNT,			/* Number of image types */
 };
@@ -909,6 +910,8 @@ int booti_setup(ulong image, ulong *relocated_addr, ulong *size,
 #define FIT_DATA_SIZE_PROP	"data-size"
 #define FIT_TIMESTAMP_PROP	"timestamp"
 #define FIT_DESC_PROP		"description"
+#define FIT_COMPAT_MODELS_PROP	"compat-models"
+#define FIT_FW_VERSION		"fw_version"
 #define FIT_ARCH_PROP		"arch"
 #define FIT_TYPE_PROP		"type"
 #define FIT_OS_PROP		"os"
@@ -976,6 +979,7 @@ static inline const char *fit_get_name(const void *fit_hdr,
 }
 
 int fit_get_desc(const void *fit, int noffset, char **desc);
+int fit_get_fw_version(const void *fit, int noffset, char **fw_version);
 int fit_get_timestamp(const void *fit, int noffset, time_t *timestamp);
 
 int fit_image_get_node(const void *fit, const char *image_uname);

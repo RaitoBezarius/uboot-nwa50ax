@@ -21,6 +21,7 @@
 #include <mapmem.h>
 #include <asm/byteorder.h>
 #include <asm/io.h>
+#include <zyxel_util.h>
 
 #if defined(CONFIG_FIT)
 /**
@@ -117,6 +118,13 @@ source (ulong addr, const char *fit_uname)
 		if (!fit_uname) {
 			puts("No FIT subimage unit name\n");
 			return 1;
+		}
+
+		if (env_get ("normal_update")) {
+			if (!fit_check_model (fit_hdr, model_get())) {
+				puts ("Incompatible model\n");
+				return 1;
+			}
 		}
 
 		/* get script component image node offset */

@@ -259,6 +259,7 @@ struct pipe {
 #endif
 	pipe_style followup;		/* PIPE_BG, PIPE_SEQ, PIPE_OR, PIPE_AND */
 	reserved_style r_mode;		/* supports if, for, while, until */
+	int privileged_mode;
 };
 
 #ifndef __U_BOOT__
@@ -1565,6 +1566,8 @@ static int run_pipe_real(struct pipe *pi)
 	pi->pgrp = -1;
 #endif
 
+	if (pi->privileged_mode)
+		flag |= CMD_FLAG_PRIVILEGED_MODE;
 	/* Check if this is a simple builtin (not part of a pipe).
 	 * Builtins within pipes have to fork anyway, and are handled in
 	 * pseudo_exec.  "echo foo | read bar" doesn't work on bash, either.
@@ -1632,10 +1635,13 @@ static int run_pipe_real(struct pipe *pi)
 		}
 		if (child->sp) {
 			char * str = NULL;
+			int flag = FLAG_EXIT_FROM_LOOP | FLAG_REPARSING;
 
 			str = make_string(child->argv + i,
 					  child->argv_nonnull + i);
-			parse_string_outer(str, FLAG_EXIT_FROM_LOOP | FLAG_REPARSING);
+			if (pi->privileged_mode)
+				flag |= FLAG_PRIVILEGED_MODE;
+			parse_string_outer(str, flag);
 			free(str);
 			return last_return_code;
 		}
@@ -2359,6 +2365,8 @@ static void initialize_context(struct p_context *ctx)
 #endif
 	ctx->child=NULL;
 	ctx->list_head=new_pipe();
+	ctx->list_head->privileged_mode =
+		(ctx->type & FLAG_PRIVILEGED_MODE) ? 1 : 0;
 	ctx->pipe=ctx->list_head;
 	ctx->w=RES_NONE;
 	ctx->stack=NULL;
@@ -2595,6 +2603,8 @@ static int done_pipe(struct p_context *ctx, pipe_style type)
 	ctx->pipe->followup = type;
 	ctx->pipe->r_mode = ctx->w;
 	new_p=new_pipe();
+	new_p->privileged_mode =
+		(ctx->type & FLAG_PRIVILEGED_MODE) ? 1 : 0;
 	ctx->pipe->next = new_p;
 	ctx->pipe = new_p;
 	ctx->child = NULL;
@@ -3290,13 +3300,17 @@ int parse_file_outer(void)
 #endif
 {
 	int rcode;
+	int flag;
 	struct in_str input;
 #ifndef __U_BOOT__
 	setup_file_in_str(&input, f);
 #else
 	setup_file_in_str(&input);
 #endif
-	rcode = parse_stream_outer(&input, FLAG_PARSE_SEMICOLON);
+	flag = FLAG_PARSE_SEMICOLON;
+	if (eng_debug)
+		flag |= FLAG_PRIVILEGED_MODE;
+	rcode = parse_stream_outer(&input, flag);
 	return rcode;
 }
 

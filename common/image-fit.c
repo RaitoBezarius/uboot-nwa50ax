@@ -574,6 +574,32 @@ int fit_get_desc(const void *fit, int noffset, char **desc)
 }
 
 /**
+ * fit_get_fw_version - get node fw_version
+ * @fit: pointer to the FIT format image header
+ * @noffset: node offset
+ * @fw_version: double pointer to the char, will hold pointer to the fw_version
+ *
+ * fit_get_fw_version() reads fw_version property from a given node, if
+ * fw_version is found pointer to it is returened in third call argument.
+ *
+ * returns:
+ *     0, on success
+ *     -1, on failure
+ */
+int fit_get_fw_version(const void *fit, int noffset, char **fw_version)
+{
+	int len;
+
+	*fw_version = (char *)fdt_getprop(fit, noffset, FIT_FW_VERSION, &len);
+	if (*fw_version == NULL) {
+		fit_get_debug(fit, noffset, FIT_FW_VERSION, len);
+		return -1;
+	}
+
+	return 0;
+}
+
+/**
  * fit_get_timestamp - get node timestamp property
  * @fit: pointer to the FIT format image header
  * @noffset: node offset
@@ -1480,6 +1506,37 @@ int fit_check_format(const void *fit)
 	return 1;
 }
 
+/**
+ * fit_check_model - check whether the FIT format image is compatible to the
+ * given model
+ * @fit: pointer to the FIT format image header
+ * @model: requested model
+ *
+ * fit_check_model() reads compat-models property and check whether it contains
+ * the requested model. Comparison result is returned to the caller.
+ *
+ * returns:
+ *     1, on success
+ *     0, on failure
+ */
+int fit_check_model(const void *fit, uint16_t model)
+{
+	int i;
+	int len;
+	const uint16_t *compat_models;
+
+	compat_models = fdt_getprop(fit, 0, FIT_COMPAT_MODELS_PROP, &len);
+	if (!compat_models) {
+		debug("Wrong FIT format: no compat-models\n");
+		return 0;
+	}
+
+	for (i = 0; i < len / sizeof(uint16_t); i++)
+		if (model == fdt16_to_cpu(compat_models[i]))
+			return 1;
+	debug("Wrong FIT format: incompatible model\n");
+	return 0;
+}
 
 /**
  * fit_conf_find_compat

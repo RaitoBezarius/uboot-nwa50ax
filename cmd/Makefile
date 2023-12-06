@@ -94,6 +94,7 @@ obj-$(CONFIG_CMD_MMC_SPI) += mmc_spi.o
 obj-$(CONFIG_MP) += mp.o
 obj-$(CONFIG_CMD_MTDPARTS) += mtdparts.o
 obj-$(CONFIG_CMD_NAND) += nand.o
+obj-$(CONFIG_CMD_NMBM) += nmbm.o
 obj-$(CONFIG_CMD_NET) += net.o
 obj-$(CONFIG_CMD_ONENAND) += onenand.o
 obj-$(CONFIG_CMD_PART) += part.o
@@ -152,6 +153,9 @@ obj-$(CONFIG_CMD_DFU) += dfu.o
 obj-$(CONFIG_CMD_GPT) += gpt.o
 obj-$(CONFIG_CMD_ETHSW) += ethsw.o
 obj-$(CONFIG_CMD_AXI) += axi.o
+
+# MTK BLE
+obj-$(CONFIG_CMD_MTK_BLE) += mtk_bleadv.o
 
 # Power
 obj-$(CONFIG_CMD_PMIC) += pmic.o

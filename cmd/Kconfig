@@ -889,6 +889,12 @@ config CMD_NAND_TORTURE
 
 endif # CMD_NAND
 
+config CMD_NMBM
+	depends on NMBM_MTD
+	bool "nmbm"
+	help
+	  NAND mapping block management (NMBM) utility
+
 config CMD_NVME
 	bool "nvme"
 	depends on NVME
@@ -1844,4 +1850,10 @@ config CMD_UBIFS
 	help
 	  UBIFS is a file system for flash devices which works on top of UBI.
 
+config CMD_MTK_BLE
+	bool "Support MTK BLE ADVERTISING function"
+	depends on CMDLINE
+	default n
+	help
+		This option enables MT7915 BLE advertising function.
 endmenu

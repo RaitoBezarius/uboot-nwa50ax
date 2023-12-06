@@ -60,6 +60,8 @@ int _do_help(cmd_tbl_t *cmd_start, int cmd_items, cmd_tbl_t *cmdtp, int flag,
 				return 1;
 			if (usage == NULL)
 				continue;
+			if (!eng_debug && (cmd_array[i]->privileged))
+				continue;
 			printf("%-*s- %s\n", CONFIG_SYS_HELP_CMD_WIDTH,
 			       cmd_array[i]->name, usage);
 		}
@@ -330,6 +332,9 @@ int cmd_auto_complete(const char *const prompt, char *buf, int *np, int *colp)
 	int cnt;
 	char last_char;
 
+	if (!eng_debug)
+		return 0;
+
 	if (strcmp(prompt, CONFIG_SYS_PROMPT) != 0)
 		return 0;	/* not in normal console */
 
@@ -511,6 +516,15 @@ enum command_ret_t cmd_process(int flag, int argc, char * const argv[],
 	/* Look up command in command table */
 	cmdtp = find_cmd(argv[0]);
 	if (cmdtp == NULL) {
+		printf("Unknown command '%s' - try 'help'\n", argv[0]);
+		return 1;
+	}
+
+	/*
+	 * Deny command execution if we are unprivileged and try to execute a
+	 * privileged command
+	 */
+	if (!(flag & CMD_FLAG_PRIVILEGED_MODE) && cmdtp->privileged) {
 		printf("Unknown command '%s' - try 'help'\n", argv[0]);
 		return 1;
 	}

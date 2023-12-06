@@ -8,6 +8,7 @@
 #include "dumpimage.h"
 #include <image.h>
 #include <version.h>
+#include <inttypes.h>
 
 static void usage(void);
 
@@ -62,10 +63,12 @@ int main(int argc, char **argv)
 	char *ptr;
 	int retval = 0;
 	struct image_type_params *tparams = NULL;
+	int verify_image = 0;
+	int show_fw_version = 0;
 
 	params.cmdname = *argv;
 
-	while ((opt = getopt(argc, argv, "li:o:T:p:V")) != -1) {
+	while ((opt = getopt(argc, argv, "li:o:T:p:V:vz")) != -1) {
 		switch (opt) {
 		case 'l':
 			params.lflag = 1;
@@ -95,6 +98,12 @@ int main(int argc, char **argv)
 		case 'V':
 			printf("dumpimage version %s\n", PLAIN_VERSION);
 			exit(EXIT_SUCCESS);
+		case 'v':
+			verify_image = 1;
+			break;
+		case 'z':
+			show_fw_version = 1;
+			break;
 		default:
 			usage();
 			break;
@@ -136,7 +145,7 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	if (params.lflag || params.iflag) {
+	if (params.lflag || params.iflag || verify_image || show_fw_version) {
 		if (fstat(ifd, &sbuf) < 0) {
 			fprintf(stderr, "%s: Can't stat \"%s\": %s\n",
 				params.cmdname, params.imagefile,
@@ -171,6 +180,40 @@ int main(int argc, char **argv)
 			 */
 			retval = dumpimage_extract_subimage(tparams, ptr,
 					&sbuf);
+		} else if (verify_image) {
+			uint16_t model;
+			FILE *fp;
+
+			if(fdt_check_header(ptr))
+				return EXIT_FAILURE;
+
+			if((uint32_t)sbuf.st_size != fdt_totalsize(ptr))
+				return EXIT_FAILURE;
+
+			if ((fp = popen("/usr/bin/zykit_info -m", "r")) == NULL) {
+				printf("zykit_info popen() error!\n");
+				return EXIT_FAILURE;
+			}
+			fscanf(fp, "%"SCNx16"", &model);
+			pclose(fp);
+
+			if(fit_check_model(ptr, model) && fit_all_image_verify(ptr))
+				return EXIT_SUCCESS;
+			else
+				return EXIT_FAILURE;
+		} else if (show_fw_version) {
+			char *fw_version;
+			int ret;
+
+			ret = fit_get_fw_version(ptr, 0, &fw_version);
+			if (ret) {
+				printf("\0");
+				return EXIT_FAILURE;
+			}
+			else {
+				printf("%s\n", fw_version);
+				return EXIT_SUCCESS;
+			}
 		} else {
 			/*
 			 * Print the image information for matched image type
@@ -204,6 +247,14 @@ static void usage(void)
 		params.cmdname);
 	fprintf(stderr,
 		"       %s -V ==> print version information and exit\n",
+		params.cmdname);
+	fprintf(stderr,
+		"       %s -v image\n"
+		"          -v ==> verify Zyxel image\n",
+		params.cmdname);
+	fprintf(stderr,
+		"       %s -z image\n"
+		"          -z ==> print Zyxel FW version\n",
 		params.cmdname);
 
 	exit(EXIT_FAILURE);

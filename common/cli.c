@@ -39,6 +39,8 @@ int run_command(const char *cmd, int flag)
 #else
 	int hush_flags = FLAG_PARSE_SEMICOLON | FLAG_EXIT_FROM_LOOP;
 
+	hush_flags |= FLAG_PRIVILEGED_MODE;
+
 	if (flag & CMD_FLAG_ENV)
 		hush_flags |= FLAG_CONT_ON_NEWLINE;
 	return parse_string_outer(cmd, hush_flags);
@@ -62,7 +64,8 @@ int run_command_repeatable(const char *cmd, int flag)
 	 * its result.
 	 */
 	if (parse_string_outer(cmd,
-			       FLAG_PARSE_SEMICOLON | FLAG_EXIT_FROM_LOOP))
+			       FLAG_PARSE_SEMICOLON | FLAG_EXIT_FROM_LOOP |
+			       FLAG_PRIVILEGED_MODE))
 		return -1;
 
 	return 0;
@@ -94,7 +97,7 @@ int run_command_list(const char *cmd, int len, int flag)
 		buff[len] = '\0';
 	}
 #ifdef CONFIG_HUSH_PARSER
-	rcode = parse_string_outer(buff, FLAG_PARSE_SEMICOLON);
+	rcode = parse_string_outer(buff, FLAG_PARSE_SEMICOLON | FLAG_PRIVILEGED_MODE);
 #else
 	/*
 	 * This function will overwrite any \n it sees with a \0, which

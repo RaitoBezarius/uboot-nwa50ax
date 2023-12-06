@@ -40,10 +40,12 @@ struct cmd_tbl_s {
 	/* do auto completion on the arguments */
 	int		(*complete)(int argc, char * const argv[], char last_char, int maxv, char *cmdv[]);
 #endif
+	int		privileged;
 };
 
 typedef struct cmd_tbl_s	cmd_tbl_t;
 
+extern int eng_debug;
 
 #if defined(CONFIG_CMD_RUN)
 extern int do_run(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[]);
@@ -172,6 +174,7 @@ int board_run_command(const char *cmdline);
 #define CMD_FLAG_REPEAT		0x0001	/* repeat last command		*/
 #define CMD_FLAG_BOOTD		0x0002	/* command is from bootd	*/
 #define CMD_FLAG_ENV		0x0004	/* command is from the environment */
+#define CMD_FLAG_PRIVILEGED_MODE	0x0010	/* in privileged mode */
 
 #ifdef CONFIG_AUTO_COMPLETE
 # define _CMD_COMPLETE(x) x,
@@ -186,14 +189,14 @@ int board_run_command(const char *cmdline);
 
 #ifdef CONFIG_CMDLINE
 #define U_BOOT_CMD_MKENT_COMPLETE(_name, _maxargs, _rep, _cmd,		\
-				_usage, _help, _comp)			\
+				_usage, _help, _comp, _privileged)	\
 		{ #_name, _maxargs, _rep, _cmd, _usage,			\
-			_CMD_HELP(_help) _CMD_COMPLETE(_comp) }
+			_CMD_HELP(_help) _CMD_COMPLETE(_comp) _privileged }
 
 #define U_BOOT_CMD_COMPLETE(_name, _maxargs, _rep, _cmd, _usage, _help, _comp) \
 	ll_entry_declare(cmd_tbl_t, _name, cmd) =			\
 		U_BOOT_CMD_MKENT_COMPLETE(_name, _maxargs, _rep, _cmd,	\
-						_usage, _help, _comp);
+						_usage, _help, _comp, 1);
 
 #else
 #define U_BOOT_SUBCMD_START(name)	static cmd_tbl_t name[] = {};
@@ -222,6 +225,11 @@ int board_run_command(const char *cmdline);
 
 #define U_BOOT_CMD_MKENT(_name, _maxargs, _rep, _cmd, _usage, _help)	\
 	U_BOOT_CMD_MKENT_COMPLETE(_name, _maxargs, _rep, _cmd,		\
-					_usage, _help, NULL)
+					_usage, _help, NULL, 1)
+
+#define U_BOOT_USER_CMD(_name, _maxargs, _rep, _cmd, _usage, _help)	\
+	ll_entry_declare(cmd_tbl_t, _name, cmd) =			\
+		U_BOOT_CMD_MKENT_COMPLETE(_name, _maxargs, _rep, _cmd,	\
+						_usage, _help, NULL, 0);
 
 #endif	/* __COMMAND_H */

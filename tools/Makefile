@@ -24,6 +24,7 @@ ENVCRC-$(CONFIG_ENV_IS_IN_EEPROM) = y
 ENVCRC-$(CONFIG_ENV_IS_IN_FLASH) = y
 ENVCRC-$(CONFIG_ENV_IS_IN_ONENAND) = y
 ENVCRC-$(CONFIG_ENV_IS_IN_NAND) = y
+ENVCRC-$(CONFIG_ENV_IS_IN_NMBM) = y
 ENVCRC-$(CONFIG_ENV_IS_IN_NVRAM) = y
 ENVCRC-$(CONFIG_ENV_IS_IN_SPI_FLASH) = y
 CONFIG_BUILD_ENVCRC ?= $(ENVCRC-y)
@@ -83,6 +84,7 @@ dumpimage-mkimage-objs := aisimage.o \
 			$(FIT_SIG_OBJS-y) \
 			common/bootm.o \
 			lib/crc32.o \
+			lib/crc32c_be.o \
 			default_image.o \
 			lib/fdtdec_common.o \
 			lib/fdtdec.o \
@@ -112,6 +114,7 @@ dumpimage-mkimage-objs := aisimage.o \
 			zynqimage.o \
 			zynqmpimage.o \
 			zynqmpbif.o \
+			mt7621nimage.o \
 			$(LIBFDT_OBJS) \
 			gpimage.o \
 			gpimage-common.o \
@@ -196,6 +199,10 @@ hostprogs-y += fdtgrep
 fdtgrep-objs += $(LIBFDT_OBJS) fdtgrep.o
 
 hostprogs-$(CONFIG_MIPS) += mips-relocs
+
+hostprogs-$(CONFIG_MACH_MT7621) += mtk-spl-patch
+
+mtk-spl-patch-objs := mtk-spl-patch.o
 
 # We build some files with extra pedantic flags to try to minimize things
 # that won't build on some weird host compiler -- though there are lots of
